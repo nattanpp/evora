@@ -1,0 +1,1544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Bouncing Head Portraits Screensaver</title>
+    <meta name="description" content="Minimalist monochrome screensaver featuring 7 cutout head portraits bouncing off edges and each other with bio cards and interview pop-ups." />
+    <meta property="og:title" content="Bouncing Head Portraits Screensaver" />
+    <meta property="og:description" content="Minimalist monochrome screensaver featuring 7 cutout head portraits bouncing off edges and each other with bio cards and interview pop-ups." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- YouTube IFrame API for background audio -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <style>
+      :root {
+        --bg-color: #ffffff;
+        --card-bg: rgba(255, 255, 255, 0.98);
+        --text-primary: #000000;
+        --text-secondary: #555555;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background-color: var(--bg-color);
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        color: var(--text-primary);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* Viewport Stage: Transparent overlay layer so heads float on top of intro text */
+      #stage {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: transparent;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      /* Editorial Intro Text Panel (Left) - Placed high and optimized for computer screens */
+      .intro-container {
+        position: fixed;
+        top: clamp(44px, 7vh, 84px);
+        left: clamp(40px, 5.5vw, 96px);
+        width: calc(100% - clamp(80px, 11vw, 192px));
+        max-width: 1100px;
+        z-index: 1; /* Below floating heads (heads are z-index: 10+) so heads glide on top of the text */
+        pointer-events: none; /* Mouse & touch interactions pass right through to heads gliding over */
+        user-select: text;
+        -webkit-user-select: text;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .intro-headline {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: clamp(1.4rem, 3.65vw, 3.75rem);
+        font-weight: 700;
+        line-height: 1.12;
+        letter-spacing: -0.038em;
+        color: #111827;
+        margin: 0 0 24px 0;
+        white-space: nowrap;
+      }
+
+      .highlight-vagar {
+        color: #3d6edb;
+        background: linear-gradient(135deg, #2c57be 0%, #3d6edb 50%, #5c88e7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-style: italic;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        padding-right: 2px;
+      }
+
+      .text-accent-evora {
+        color: #3d6edb;
+        font-weight: 600;
+      }
+
+      .text-accent-slow {
+        color: #3d6edb;
+        font-weight: 600;
+        font-style: italic;
+      }
+
+      .intro-body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: clamp(1.14rem, 1.25vw, 1.25rem);
+        font-weight: 400;
+        line-height: 1.66;
+        color: #374151;
+        margin: 0 0 20px 0;
+        letter-spacing: -0.015em;
+        max-width: 520px;
+      }
+
+      .intro-callout {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.012em;
+        color: #4b5563;
+        margin-top: 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: transparent;
+        border: none;
+        padding: 0;
+      }
+
+      .intro-callout-line {
+        display: inline-block;
+        width: 22px;
+        height: 2px;
+        background: #3d6edb;
+        border-radius: 1px;
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 768px) {
+        .intro-container {
+          top: 24px;
+          left: 20px;
+          right: 20px;
+          width: calc(100% - 40px);
+          max-width: calc(100% - 40px);
+        }
+        .intro-headline {
+          font-size: clamp(1.05rem, 4.6vw, 1.95rem);
+          white-space: nowrap;
+          margin-bottom: 14px;
+        }
+        .intro-body {
+          font-size: 1.05rem;
+          line-height: 1.55;
+          margin-bottom: 14px;
+        }
+        .intro-callout {
+          font-size: 0.88rem;
+        }
+      }
+
+      /* Head Item: Balanced size, floating cutout silhouette */
+      .head-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 250px;
+        cursor: grab;
+        z-index: 15;
+        will-change: transform, opacity;
+        pointer-events: auto;
+        opacity: 0;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        animation: headFadeIn 0.85s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+      }
+
+      .head-container:active,
+      .head-container.is-dragging {
+        cursor: grabbing;
+      }
+
+      body.is-grabbing,
+      body.is-grabbing * {
+        cursor: grabbing !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+      }
+
+      @keyframes headFadeIn {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .head-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform-origin: center center;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+        /* Clean cutout feel: subtle drop-shadow conforming directly to the head silhouette */
+        filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.16));
+        background: transparent;
+        border: none;
+        box-shadow: none;
+      }
+
+      .head-container:hover .head-inner,
+      .head-container.is-active .head-inner,
+      .head-container.is-playing .head-inner {
+        transform: scale(1.26);
+        filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.28));
+        z-index: 50;
+      }
+
+      .head-container.is-dragging .head-inner {
+        transform: scale(1.32);
+        filter: drop-shadow(0 28px 42px rgba(0, 0, 0, 0.36));
+        z-index: 70;
+      }
+
+      .head-container.is-active,
+      .head-container.is-playing {
+        z-index: 60;
+      }
+
+      .head-container.is-dragging {
+        z-index: 75;
+      }
+
+      .head-avatar-wrapper {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform-origin: center center;
+        animation: headAvatarScaleIn 0.85s cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+      }
+
+      @keyframes headAvatarScaleIn {
+        0% {
+          transform: scale(0.82);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* Isolated head PNG: transparent background, high-contrast monochrome finish */
+      .head-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        background: transparent;
+        filter: grayscale(0%) contrast(110%);
+        -webkit-filter: grayscale(0%) contrast(110%);
+        pointer-events: none;
+        transition: filter 0.3s ease;
+      }
+
+      .head-container:hover .head-photo,
+      .head-container.is-active .head-photo,
+      .head-container.is-playing .head-photo {
+        filter: grayscale(0%) contrast(118%);
+      }
+
+      /* Clean SVG Cutout Fallback Head Silhouette */
+      .head-fallback {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        color: #000000;
+        pointer-events: none;
+      }
+
+      .head-fallback svg {
+        width: 82%;
+        height: 82%;
+        fill: #000000;
+      }
+
+      .head-fallback-initials {
+        position: absolute;
+        font-weight: 700;
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+        top: 42%;
+      }
+
+      /* Minimal Play Badge Pill (pure black & white) */
+      .head-play-pill {
+        position: absolute;
+        bottom: 6px;
+        right: 14px;
+        width: 28px;
+        height: 28px;
+        background: #000000;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: scale(0.6);
+        transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+      }
+
+      .head-play-pill svg {
+        width: 10px;
+        height: 10px;
+        fill: #ffffff;
+        margin-left: 1px;
+      }
+
+      .head-container:hover .head-play-pill,
+      .head-container.is-active .head-play-pill,
+      .head-container.is-playing .head-play-pill {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      /* Info Card Overlay: Slick Swiss Editorial Monochromatic Finish */
+      #infoCard {
+        position: fixed;
+        width: 220px;
+        padding: 14px 16px;
+        background: #ffffff;
+        border-radius: 6px;
+        box-shadow: 0 14px 38px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(4px) scale(0.98);
+        transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform, opacity;
+      }
+
+      #infoCard.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .card-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #000000;
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+        margin-bottom: 5px;
+      }
+
+      .card-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        color: #555555;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+
+      .card-meta-dot {
+        display: inline-block;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #888888;
+      }
+
+      .card-gender-badge {
+        color: #555555;
+        font-weight: 500;
+      }
+
+      .card-city {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: #555555;
+        letter-spacing: -0.01em;
+        font-weight: 400;
+      }
+
+      .card-city svg {
+        width: 12px;
+        height: 12px;
+        stroke: #555555;
+        stroke-width: 2;
+        flex-shrink: 0;
+      }
+
+      /* Floating Video Player: Opens next to the head with everything else remaining fully visible */
+      #videoModal {
+        position: fixed;
+        inset: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        display: block;
+        z-index: 120;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.22s ease, visibility 0.22s ease;
+      }
+
+      #videoModal.open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: none; /* Clicks outside the player pass through to heads & stage */
+      }
+
+      .modal-box {
+        position: fixed;
+        width: 580px;
+        max-width: calc(100vw - 24px);
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22), 0 4px 16px rgba(0, 0, 0, 0.08);
+        transform: scale(0.92);
+        opacity: 0;
+        pointer-events: auto; /* Video box captures user clicks & controls */
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, left 0.3s cubic-bezier(0.16, 1, 0.3, 1), top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 200;
+      }
+
+      #videoModal.open .modal-box {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 18px;
+        background: #ffffff;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      .modal-person-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .modal-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #000000;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .modal-subtitle {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #666666;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .video-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 ratio */
+        background: #000000;
+      }
+
+      .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      /* Control Utility Bar: Minimalist Monochrome */
+      .utility-bar {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 80;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 6px 12px;
+        border-radius: 40px;
+        border: 1.5px solid #000000;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      .utility-btn {
+        background: transparent;
+        border: none;
+        color: #000000;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .utility-btn:hover,
+      .utility-btn.active {
+        background: #000000;
+        color: #ffffff;
+      }
+
+      @media (max-width: 640px) {
+        .head-container {
+          width: 185px;
+          height: 185px;
+        }
+        #infoCard {
+          width: 216px;
+          padding: 14px 16px;
+        }
+        .modal-box {
+          width: calc(100vw - 20px);
+        }
+        .utility-bar {
+          bottom: 14px;
+          right: 14px;
+          padding: 4px 8px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .head-container {
+          animation: none !important;
+          opacity: 1 !important;
+        }
+        .head-avatar-wrapper {
+          animation: none !important;
+          transform: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Editorial Intro Text (Left panel, below floating heads layer) -->
+    <aside class="intro-container" aria-label="About the project">
+      <h1 class="intro-headline">What does <span class="highlight-vagar">vagar</span> mean to you?</h1>
+      <p class="intro-body">
+        Our project begins with this seemingly simple word, yet it points to something hard to translate: a <span class="text-accent-slow">slow way of living</span> that many people in <span class="text-accent-evora">Évora</span> embody in their everyday lives.
+      </p>
+      <p class="intro-body">
+        To get closer to its meaning, we wandered through the city and met people of different backgrounds, ages and genders, asking each of them the same simple question.
+      </p>
+      <div class="intro-callout">
+        <span class="intro-callout-line" aria-hidden="true"></span>
+        <span>Click on their head to discover their stories</span>
+      </div>
+    </aside>
+
+    <!-- Full-screen Stage for Floating Cutout Heads -->
+    <main id="stage" aria-label="Screensaver Stage"></main>
+
+    <!-- Minimalist Monochrome Info Card -->
+    <div id="infoCard" role="tooltip" aria-hidden="true">
+      <h3 class="card-name" id="cardName"></h3>
+      <div class="card-meta-row">
+        <span id="cardAge"></span>
+        <span class="card-meta-dot" aria-hidden="true"></span>
+        <span id="cardGender" class="card-gender-badge"></span>
+      </div>
+      <div class="card-city">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span id="cardCity"></span>
+      </div>
+    </div>
+
+    <!-- YouTube Interview Modal (No cross button - click head to close or navigate) -->
+    <div id="videoModal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal-box" id="modalBox">
+        <div class="modal-header">
+          <div class="modal-person-info">
+            <div class="modal-title" id="modalName">Interview</div>
+            <div class="modal-subtitle" id="modalLocation"></div>
+          </div>
+        </div>
+        <div class="video-wrapper">
+          <iframe id="videoIframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden Ambient Audio Player (Plays soundtrack of YouTube: WnA6uVcjgfI) -->
+    <div id="ambientAudioMount" style="position:fixed;bottom:-999px;left:-999px;width:1px;height:1px;pointer-events:none;opacity:0.001;overflow:hidden;z-index:-1;" aria-hidden="true">
+      <div id="ambientYoutubePlayer"></div>
+    </div>
+
+    <!-- Minimal Discreet Utility Bar -->
+    <nav class="utility-bar" aria-label="Controls">
+      <button class="utility-btn" id="motionToggleBtn" title="Toggle reduced motion">
+        <span id="motionStatus">Reduced Motion</span>
+      </button>
+    </nav>
+
+    <script>
+      /* ==========================================================================
+         1. PEOPLE CONFIGURATION ARRAY (7 People with Cutout Head Portraits)
+         ========================================================================== */
+      const people = [
+        {
+          name: "Levi Santos",
+          age: 51,
+          gender: "Male",
+          city: "Brazil",
+          photo: "https://res.cloudinary.com/wkvga9rq/image/upload/f_auto/q_auto/brazilian_yellow.png",
+          youtubeId: "KRika-D6aPY"
+        },
+        {
+          name: "Anna",
+          age: 52,
+          gender: "Female",
+          city: "Evora, Portugal",
+          photo: "https://res.cloudinary.com/wkvga9rq/image/upload/f_auto/q_auto/frenchladyhead_yellow.png",
+          youtubeId: "uc5HAWUrv5w"
+        },
+        {
+          name: "Maria",
+          age: 28,
+          gender: "Female",
+          city: "Templo Romano, Évora",
+          photo: "https://res.cloudinary.com/wkvga9rq/image/upload/f_auto/q_auto/artistlady_yellow.png",
+          youtubeId: "VeokmgkjFus"
+        },
+        {
+          name: "Margarita",
+          age: 63,
+          gender: "Female",
+          city: "Bairro da Malagueira, Évora",
+          photo: "https://res.cloudinary.com/wkvga9rq/image/upload/f_auto/q_auto/Margarita.png",
+          youtubeId: "eIho2S0ZahI"
+        },
+        {
+          name: "Maria",
+          age: 72,
+          gender: "Female",
+          city: "Évora Centro, Évora",
+          photo: "https://res.cloudinary.com/wkvga9rq/image/upload/f_auto/q_auto/Maria.png",
+          youtubeId: "iCvmsMzlF7o"
+        },
+        {
+          name: "Miguel",
+          age: 23,
+          gender: "Male",
+          city: "Brazil",
+          photo: "https://res.cloudinary.com/wkvga9rq/image/upload/f_auto/q_auto/Joao.png",
+          youtubeId: "KM4Xe6Dlp0Y"
+        },
+        {
+          name: "Octavio",
+          age: 19,
+          gender: "Male",
+          city: "Largo Luís de Camões, Évora",
+          photo: "https://res.cloudinary.com/wkvga9rq/image/upload/f_auto/q_auto/Octavio.png",
+          youtubeId: "qp0HIF3SfI4"
+        }
+      ];
+
+      /* ==========================================================================
+         2. STATE & CONFIGURATION
+         ========================================================================== */
+      const stage = document.getElementById("stage");
+      const infoCard = document.getElementById("infoCard");
+      const cardName = document.getElementById("cardName");
+      const cardAge = document.getElementById("cardAge");
+      const cardGender = document.getElementById("cardGender");
+      const cardCity = document.getElementById("cardCity");
+
+      const videoModal = document.getElementById("videoModal");
+      const modalBox = document.getElementById("modalBox");
+      const videoIframe = document.getElementById("videoIframe");
+      const modalName = document.getElementById("modalName");
+      const modalLocation = document.getElementById("modalLocation");
+
+      const motionToggleBtn = document.getElementById("motionToggleBtn");
+
+      // System prefers-reduced-motion check
+      const motionMediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let isReducedMotion = motionMediaQuery.matches;
+
+      let isModalOpen = false;
+      let activeHeadIndex = null; // Currently hovered or tapped head
+      let lastTime = performance.now();
+      let headsState = [];
+
+      // Drag and throw interaction state
+      let draggedHeadIndex = null;
+      let dragStartX = 0;
+      let dragStartY = 0;
+      let dragOffsetHeadX = 0;
+      let dragOffsetHeadY = 0;
+      let hasDragged = false;
+      let justDragged = false;
+      let pointerHistory = [];
+
+      function getInitials(name) {
+        return name
+          .split(" ")
+          .map(part => part[0])
+          .filter(Boolean)
+          .slice(0, 2)
+          .join("")
+          .toUpperCase();
+      }
+
+      /* ==========================================================================
+         3. INITIALIZE HEAD OBJECTS & DOM
+         ========================================================================== */
+      function getHeadDiameter() {
+        return window.innerWidth <= 640 ? 120 : 168;
+      }
+
+      function getVisualDiameter() {
+        return window.innerWidth <= 640 ? 185 : 250;
+      }
+
+      function initHeads() {
+        stage.innerHTML = "";
+        headsState = [];
+        const diameter = getHeadDiameter();
+        const visualDiameter = getVisualDiameter();
+        const maxX = Math.max(10, window.innerWidth - visualDiameter);
+        const maxY = Math.max(10, window.innerHeight - visualDiameter);
+
+        people.forEach((person, index) => {
+          // DOM element container
+          const container = document.createElement("div");
+          container.className = "head-container";
+          container.dataset.index = index;
+          container.tabIndex = 0;
+          container.setAttribute("role", "button");
+          container.setAttribute("aria-label", `${person.name}, ${person.age} years old from ${person.city}. Press to view details.`);
+
+          // Staggered fade-in entry delay: each head glides in progressively
+          const staggerDelay = (index * 0.14).toFixed(2);
+          if (isReducedMotion) {
+            container.style.animation = "none";
+            container.style.opacity = "1";
+          } else {
+            container.style.animationDelay = `${staggerDelay}s`;
+          }
+
+          const inner = document.createElement("div");
+          inner.className = "head-inner";
+
+          const avatarWrapper = document.createElement("div");
+          avatarWrapper.className = "head-avatar-wrapper";
+          if (!isReducedMotion) {
+            avatarWrapper.style.animationDelay = `${staggerDelay}s`;
+          }
+
+          // Fallback silhouette if image fails to load or during network latency
+          const fallback = document.createElement("div");
+          fallback.className = "head-fallback";
+          fallback.innerHTML = `
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="38" r="28" />
+              <ellipse cx="50" cy="88" rx="34" ry="24" />
+            </svg>
+            <span class="head-fallback-initials">${getInitials(person.name)}</span>
+          `;
+
+          const img = document.createElement("img");
+          img.className = "head-photo";
+          img.src = person.photo;
+          img.alt = person.name;
+          img.loading = "eager";
+
+          // If photo loads properly, hide the silhouette fallback behind it
+          img.onload = () => {
+            fallback.style.display = "none";
+          };
+          img.onerror = () => {
+            img.style.display = "none";
+            fallback.style.display = "flex";
+          };
+
+          avatarWrapper.appendChild(fallback);
+          avatarWrapper.appendChild(img);
+
+          // Minimal Monochrome play indicator pill
+          const playPill = document.createElement("div");
+          playPill.className = "head-play-pill";
+          playPill.innerHTML = `<svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>`;
+
+          inner.appendChild(avatarWrapper);
+          inner.appendChild(playPill);
+          container.appendChild(inner);
+          stage.appendChild(container);
+
+          // Disperse positions so heads do not start overlapping
+          let initialX, initialY, overlapping, attempts = 0;
+          do {
+            overlapping = false;
+            initialX = Math.random() * (maxX - 10) + 5;
+            initialY = Math.random() * (maxY - 10) + 5;
+            for (let j = 0; j < headsState.length; j++) {
+              const dx = initialX - headsState[j].x;
+              const dy = initialY - headsState[j].y;
+              if (Math.hypot(dx, dy) < diameter * 0.9) {
+                overlapping = true;
+                break;
+              }
+            }
+            attempts++;
+          } while (overlapping && attempts < 100);
+
+          // Random bounce angles
+          let angle;
+          do {
+            angle = Math.random() * Math.PI * 2;
+          } while (Math.abs(Math.cos(angle)) < 0.25 || Math.abs(Math.sin(angle)) < 0.25);
+
+          // Smooth gentle speed in px/sec
+          const baseSpeed = 60 + Math.random() * 25;
+
+          headsState.push({
+            el: container,
+            innerEl: inner,
+            imgEl: img,
+            person: person,
+            x: initialX,
+            y: initialY,
+            vx: Math.cos(angle) * baseSpeed,
+            vy: Math.sin(angle) * baseSpeed,
+            baseSpeed: baseSpeed,
+            diameter: diameter,
+            visualDiameter: visualDiameter,
+            mass: 1 // Equal mass for head-to-head collisions
+          });
+
+          // Grab & Drag with Cursor or Touch
+          container.addEventListener("pointerdown", (e) => {
+            if (e.button !== 0) return; // Only primary mouse button or touch
+            draggedHeadIndex = index;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragOffsetHeadX = e.clientX - headsState[index].x;
+            dragOffsetHeadY = e.clientY - headsState[index].y;
+            hasDragged = false;
+            pointerHistory = [{ x: e.clientX, y: e.clientY, time: performance.now() }];
+
+            container.classList.add("is-dragging");
+            document.body.classList.add("is-grabbing");
+            try {
+              container.setPointerCapture(e.pointerId);
+            } catch (_) {}
+          });
+
+          container.addEventListener("pointermove", (e) => {
+            if (draggedHeadIndex !== index) return;
+
+            const dist = Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY);
+            if (dist > 4) {
+              hasDragged = true;
+              if (activeHeadIndex === index) {
+                infoCard.classList.remove("visible");
+                infoCard.setAttribute("aria-hidden", "true");
+              }
+            }
+
+            const head = headsState[index];
+            const maxX = window.innerWidth - head.visualDiameter;
+            const maxY = window.innerHeight - head.visualDiameter;
+
+            head.x = Math.max(0, Math.min(maxX, e.clientX - dragOffsetHeadX));
+            head.y = Math.max(0, Math.min(maxY, e.clientY - dragOffsetHeadY));
+            head.el.style.transform = `translate3d(${head.x}px, ${head.y}px, 0)`;
+
+            // Track recent pointer velocity for throwing inertia
+            const now = performance.now();
+            pointerHistory.push({ x: e.clientX, y: e.clientY, time: now });
+            if (pointerHistory.length > 5) {
+              pointerHistory.shift();
+            }
+
+            if (isModalOpen && activeModalIndex === index) {
+              positionModalNextToHead(head);
+            }
+          });
+
+          const onPointerRelease = (e) => {
+            if (draggedHeadIndex !== index) return;
+
+            try {
+              container.releasePointerCapture(e.pointerId);
+            } catch (_) {}
+
+            container.classList.remove("is-dragging");
+            document.body.classList.remove("is-grabbing");
+
+            const head = headsState[index];
+
+            if (hasDragged) {
+              justDragged = true;
+              setTimeout(() => {
+                justDragged = false;
+              }, 120);
+
+              // Calculate release throw velocity
+              if (pointerHistory.length >= 2) {
+                const oldest = pointerHistory[0];
+                const newest = pointerHistory[pointerHistory.length - 1];
+                const dt = (newest.time - oldest.time) / 1000;
+                if (dt > 0.008) {
+                  const vx = (newest.x - oldest.x) / dt;
+                  const vy = (newest.y - oldest.y) / dt;
+                  const speed = Math.hypot(vx, vy);
+
+                  if (speed > 30) {
+                    const maxSpeed = 750;
+                    const factor = speed > maxSpeed ? maxSpeed / speed : 1;
+                    head.vx = vx * factor;
+                    head.vy = vy * factor;
+                  } else {
+                    const currentSpeed = Math.hypot(head.vx, head.vy) || head.baseSpeed;
+                    const angle = Math.atan2(head.vy, head.vx);
+                    head.vx = Math.cos(angle) * currentSpeed;
+                    head.vy = Math.sin(angle) * currentSpeed;
+                  }
+                }
+              }
+            }
+
+            draggedHeadIndex = null;
+            hasDragged = false;
+            pointerHistory = [];
+          };
+
+          container.addEventListener("pointerup", onPointerRelease);
+          container.addEventListener("pointercancel", onPointerRelease);
+
+          // Mouse Event Handlers
+          container.addEventListener("mouseenter", () => handleMouseEnter(index));
+          container.addEventListener("mouseleave", () => handleMouseLeave(index));
+
+          // Click / Tap Event Handler
+          container.addEventListener("click", (e) => handleClick(index, e));
+
+          // Keyboard Accessibility
+          container.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openVideoModal(person, headsState[index], index);
+            }
+          });
+        });
+
+        // Global safety release if pointerup occurs outside window
+        window.addEventListener("pointerup", () => {
+          if (draggedHeadIndex !== null) {
+            document.body.classList.remove("is-grabbing");
+            if (headsState[draggedHeadIndex]) {
+              headsState[draggedHeadIndex].el.classList.remove("is-dragging");
+            }
+            draggedHeadIndex = null;
+            hasDragged = false;
+          }
+        });
+      }
+
+      /* ==========================================================================
+         4. HOVER, TOUCH & CARD LOGIC
+         ========================================================================== */
+      function activateHead(index) {
+        if (activeHeadIndex !== null && activeHeadIndex !== index) {
+          deactivateHead(activeHeadIndex);
+        }
+        activeHeadIndex = index;
+        const head = headsState[index];
+        if (!head) return;
+
+        head.el.classList.add("is-active");
+        updateCardContent(head.person);
+        positionCardForHead(head);
+        infoCard.classList.add("visible");
+        infoCard.setAttribute("aria-hidden", "false");
+      }
+
+      function deactivateHead(index) {
+        if (index === null || !headsState[index]) return;
+        headsState[index].el.classList.remove("is-active");
+        if (activeHeadIndex === index) {
+          activeHeadIndex = null;
+          infoCard.classList.remove("visible");
+          infoCard.setAttribute("aria-hidden", "true");
+        }
+      }
+
+      function handleMouseEnter(index) {
+        if (draggedHeadIndex !== null) return;
+        // If this head is currently playing the open video, no need for the info card
+        if (isModalOpen && activeModalIndex === index) return;
+        activateHead(index);
+      }
+
+      function handleMouseLeave(index) {
+        if (draggedHeadIndex !== null) return;
+        deactivateHead(index);
+      }
+
+      function handleClick(index, event) {
+        event.stopPropagation();
+        if (justDragged) {
+          return;
+        }
+        const head = headsState[index];
+        if (!head) return;
+
+        // If video is open and user clicks again on the playing head, close the video!
+        if (isModalOpen && activeModalIndex === index) {
+          closeVideoModal();
+          return;
+        }
+
+        const isTouch = window.matchMedia("(pointer: coarse)").matches;
+        // On touch: if no video is open yet and not active, first tap previews card
+        // But if a video is already open, tap any other head immediately navigates to its video!
+        if (isTouch && !isModalOpen && activeHeadIndex !== index) {
+          activateHead(index);
+        } else {
+          openVideoModal(head.person, head, index);
+        }
+      }
+
+      // Tap or click outside player and heads dismisses player / card
+      document.addEventListener("click", (e) => {
+        if (modalBox.contains(e.target) || e.target.closest(".head-container") || e.target.closest(".utility-bar")) {
+          return;
+        }
+        if (isModalOpen) {
+          closeVideoModal();
+        } else if (activeHeadIndex !== null) {
+          deactivateHead(activeHeadIndex);
+        }
+      });
+
+      function updateCardContent(person) {
+        cardName.textContent = person.name;
+        cardAge.textContent = `${person.age} years old`;
+        cardGender.textContent = person.gender;
+        cardCity.textContent = person.city;
+      }
+
+      /* Keep card strictly on screen at all times */
+      function positionCardForHead(head) {
+        const diameter = head.visualDiameter;
+        const scale = 1.26;
+        const scaledRadius = (diameter * scale) / 2;
+        const centerX = head.x + diameter / 2;
+        const centerY = head.y + diameter / 2;
+
+        const cardWidth = infoCard.offsetWidth || 240;
+        const cardHeight = infoCard.offsetHeight || 135;
+        const screenMargin = 12;
+        const gap = 16;
+
+        let targetX;
+        let targetY;
+
+        // Try placing on the right side of the enlarged head
+        const placeRightX = centerX + scaledRadius + gap;
+        // Try placing on the left side of the enlarged head
+        const placeLeftX = centerX - scaledRadius - gap - cardWidth;
+
+        if (placeRightX + cardWidth <= window.innerWidth - screenMargin) {
+          targetX = placeRightX;
+        } else if (placeLeftX >= screenMargin) {
+          targetX = placeLeftX;
+        } else {
+          targetX = Math.max(screenMargin, Math.min(window.innerWidth - cardWidth - screenMargin, centerX - cardWidth / 2));
+        }
+
+        // Vertical positioning: align with center of head, clamp to viewport
+        targetY = centerY - cardHeight / 2;
+        targetY = Math.max(screenMargin, Math.min(window.innerHeight - cardHeight - screenMargin, targetY));
+
+        infoCard.style.left = `${Math.round(targetX)}px`;
+        infoCard.style.top = `${Math.round(targetY)}px`;
+      }
+
+      /* ==========================================================================
+         5. YOUTUBE VIDEO POP-UP MODAL (youtube-nocookie.com)
+         ========================================================================== */
+      let activeModalIndex = null;
+      let activeModalHead = null;
+
+      function positionModalNextToHead(head) {
+        if (!head) return;
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+
+        // Substantially larger video size (580px wide on desktop), responsive on mobile
+        const modalWidth = Math.min(580, winWidth - 28);
+        const modalHeight = Math.round((modalWidth * 9 / 16) + 48);
+
+        const diameter = head.visualDiameter;
+        const scale = 1.26;
+        const scaledRadius = (diameter * scale) / 2;
+        const centerX = head.x + diameter / 2;
+        const centerY = head.y + diameter / 2;
+
+        const gap = 16;
+        const margin = 14;
+
+        let left;
+        let top;
+
+        // Primary: place to the RIGHT of the head
+        const rightX = centerX + scaledRadius + gap;
+        // Secondary: place to the LEFT of the head
+        const leftX = centerX - scaledRadius - gap - modalWidth;
+
+        if (rightX + modalWidth <= winWidth - margin) {
+          left = rightX;
+          top = centerY - modalHeight / 2;
+        } else if (leftX >= margin) {
+          left = leftX;
+          top = centerY - modalHeight / 2;
+        } else {
+          // If neither side fits horizontally (e.g. mobile or near viewport edge), place below or above
+          left = Math.max(margin, Math.min(winWidth - modalWidth - margin, centerX - modalWidth / 2));
+          const belowY = centerY + scaledRadius + gap;
+          const aboveY = centerY - scaledRadius - gap - modalHeight;
+          if (belowY + modalHeight <= winHeight - margin) {
+            top = belowY;
+          } else if (aboveY >= margin) {
+            top = aboveY;
+          } else {
+            top = centerY - modalHeight / 2;
+          }
+        }
+
+        // Clamp safely within viewport bounds
+        left = Math.max(margin, Math.min(winWidth - modalWidth - margin, left));
+        top = Math.max(margin, Math.min(winHeight - modalHeight - margin, top));
+
+        modalBox.style.left = `${Math.round(left)}px`;
+        modalBox.style.top = `${Math.round(top)}px`;
+        modalBox.style.width = `${Math.round(modalWidth)}px`;
+
+        // Smooth transform origin pointing back to the head center
+        const originX = Math.round(centerX - left);
+        const originY = Math.round(centerY - top);
+        modalBox.style.transformOrigin = `${originX}px ${originY}px`;
+      }
+
+      function openVideoModal(person, head, index) {
+        // If switching from another video, remove is-playing from the previous head
+        if (activeModalIndex !== null && headsState[activeModalIndex]) {
+          headsState[activeModalIndex].el.classList.remove("is-playing");
+        }
+
+        isModalOpen = true;
+        activeModalIndex = (typeof index === "number") ? index : (head && head.el ? parseInt(head.el.dataset.index, 10) : activeHeadIndex);
+        activeModalHead = head || (activeModalIndex !== null ? headsState[activeModalIndex] : null);
+
+        if (activeModalHead) {
+          activeModalHead.el.classList.add("is-playing");
+        }
+
+        if (activeHeadIndex !== null) {
+          deactivateHead(activeHeadIndex);
+        }
+
+        modalName.textContent = person.name;
+        modalLocation.textContent = `${person.city} • ${person.age} YRS`;
+
+        // Position the video player next to the head portrait
+        positionModalNextToHead(activeModalHead);
+
+        // Embedded video with unmuted audio playback enabled, playing directly on-page
+        const embedUrl = `https://www.youtube-nocookie.com/embed/${person.youtubeId}?autoplay=1&enablejsapi=1&playsinline=1&rel=0&modestbranding=1`;
+        videoIframe.src = embedUrl;
+
+        videoModal.classList.add("open");
+        videoModal.setAttribute("aria-hidden", "false");
+
+        infoCard.classList.remove("visible");
+
+        // Duck/pause background ambient audio while interview video is playing
+        pauseBgAudioForVideo();
+      }
+
+      function closeVideoModal() {
+        if (!isModalOpen) return;
+        isModalOpen = false;
+
+        if (activeModalIndex !== null && headsState[activeModalIndex]) {
+          headsState[activeModalIndex].el.classList.remove("is-playing");
+        }
+        activeModalIndex = null;
+        activeModalHead = null;
+
+        videoIframe.src = "";
+        videoModal.classList.remove("open");
+        videoModal.setAttribute("aria-hidden", "true");
+
+        if (activeHeadIndex !== null) {
+          deactivateHead(activeHeadIndex);
+        }
+
+        lastTime = performance.now();
+
+        // Resume ambient soundtrack once the interview closes
+        resumeBgAudioAfterVideo();
+      }
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isModalOpen) {
+          closeVideoModal();
+        }
+      });
+
+      /* ==========================================================================
+         6. ANIMATION & PHYSICS: SCREEN BOUNCE + HEAD-TO-HEAD ELASTIC COLLISIONS
+         ========================================================================== */
+      function resolveHeadCollisions() {
+        const count = headsState.length;
+        for (let i = 0; i < count; i++) {
+          for (let j = i + 1; j < count; j++) {
+            const h1 = headsState[i];
+            const h2 = headsState[j];
+
+            // Radius for collision detection
+            const r1 = h1.diameter / 2;
+            const r2 = h2.diameter / 2;
+            const minDist = r1 + r2;
+
+            // Center points
+            const c1x = h1.x + h1.visualDiameter / 2;
+            const c1y = h1.y + h1.visualDiameter / 2;
+            const c2x = h2.x + h2.visualDiameter / 2;
+            const c2y = h2.y + h2.visualDiameter / 2;
+
+            const dx = c2x - c1x;
+            const dy = c2y - c1y;
+            const dist = Math.hypot(dx, dy);
+
+            // Overlap detected: bounce off each other!
+            if (dist < minDist && dist > 0.0001) {
+              const nx = dx / dist; // Normal vector
+              const ny = dy / dist;
+
+              // Separate overlapping heads so they don't stick or jitter
+              const overlap = minDist - dist;
+              const separationX = (nx * overlap) / 2;
+              const separationY = (ny * overlap) / 2;
+
+              const isFixedI = (activeHeadIndex === i || (isModalOpen && activeModalIndex === i) || draggedHeadIndex === i);
+              const isFixedJ = (activeHeadIndex === j || (isModalOpen && activeModalIndex === j) || draggedHeadIndex === j);
+
+              if (!isFixedI && isFixedJ) {
+                h1.x -= separationX * 2;
+                h1.y -= separationY * 2;
+              } else if (isFixedI && !isFixedJ) {
+                h2.x += separationX * 2;
+                h2.y += separationY * 2;
+              } else if (!isFixedI && !isFixedJ) {
+                h1.x -= separationX;
+                h1.y -= separationY;
+                h2.x += separationX;
+                h2.y += separationY;
+              }
+
+              // Relative velocity
+              const kx = h1.vx - h2.vx;
+              const ky = h1.vy - h2.vy;
+
+              // Velocity along normal
+              const p = 2 * (nx * kx + ny * ky) / (h1.mass + h2.mass);
+
+              // Elastic collision impulse (only if moving toward each other)
+              if (nx * kx + ny * ky > 0) {
+                if (!isFixedI) {
+                  h1.vx -= p * h2.mass * nx * (isFixedJ ? 1.4 : 1);
+                  h1.vy -= p * h2.mass * ny * (isFixedJ ? 1.4 : 1);
+                }
+                if (!isFixedJ) {
+                  h2.vx += p * h1.mass * nx * (isFixedI ? 1.4 : 1);
+                  h2.vy += p * h1.mass * ny * (isFixedI ? 1.4 : 1);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      function animate(currentTime) {
+        requestAnimationFrame(animate);
+
+        let dt = (currentTime - lastTime) / 1000;
+        lastTime = currentTime;
+
+        if (dt > 0.1) dt = 0.1;
+
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        const motionFactor = isReducedMotion ? 0.15 : 1.0;
+
+        // 1. Move heads and bounce on screen boundaries
+        headsState.forEach((head, index) => {
+          const maxX = winWidth - head.visualDiameter;
+          const maxY = winHeight - head.visualDiameter;
+
+          // If this head is currently being grabbed with cursor, position is driven directly by cursor
+          if (draggedHeadIndex === index) {
+            return;
+          }
+
+          // If this head is currently hovered or currently playing its video, keep it docked
+          if (activeHeadIndex === index || (isModalOpen && activeModalIndex === index)) {
+            if (activeHeadIndex === index) {
+              positionCardForHead(head);
+            }
+            return;
+          }
+
+          head.x += head.vx * dt * motionFactor;
+          head.y += head.vy * dt * motionFactor;
+
+          // Bounce off left/right edges
+          if (head.x <= 0) {
+            head.x = 0;
+            head.vx = Math.abs(head.vx);
+          } else if (head.x >= maxX) {
+            head.x = maxX;
+            head.vx = -Math.abs(head.vx);
+          }
+
+          // Bounce off top/bottom edges
+          if (head.y <= 0) {
+            head.y = 0;
+            head.vy = Math.abs(head.vy);
+          } else if (head.y >= maxY) {
+            head.y = maxY;
+            head.vy = -Math.abs(head.vy);
+          }
+        });
+
+        // 2. Resolve head-on-head collisions
+        resolveHeadCollisions();
+
+        // 3. Render final transformed positions
+        headsState.forEach((head) => {
+          head.el.style.transform = `translate3d(${head.x}px, ${head.y}px, 0)`;
+        });
+      }
+
+      /* ==========================================================================
+         7. WINDOW RESIZE & SCREEN CONSTRAINTS
+         ========================================================================== */
+      window.addEventListener("resize", () => {
+        const diameter = getHeadDiameter();
+        const visualDiameter = getVisualDiameter();
+        const maxX = Math.max(0, window.innerWidth - visualDiameter);
+        const maxY = Math.max(0, window.innerHeight - visualDiameter);
+
+        headsState.forEach((head) => {
+          head.diameter = diameter;
+          head.visualDiameter = visualDiameter;
+          head.el.style.width = `${visualDiameter}px`;
+          head.el.style.height = `${visualDiameter}px`;
+
+          head.x = Math.max(0, Math.min(maxX, head.x));
+          head.y = Math.max(0, Math.min(maxY, head.y));
+          head.el.style.transform = `translate3d(${head.x}px, ${head.y}px, 0)`;
+        });
+
+        if (isModalOpen && activeModalHead) {
+          positionModalNextToHead(activeModalHead);
+        }
+
+        if (activeHeadIndex !== null && headsState[activeHeadIndex]) {
+          positionCardForHead(headsState[activeHeadIndex]);
+        }
+      });
+
+      /* ==========================================================================
+         8. REDUCED MOTION SUPPORT & CONTROLS
+         ========================================================================== */
+      function updateMotionUI() {
+        if (isReducedMotion) {
+          motionToggleBtn.classList.add("active");
+          document.getElementById("motionStatus").textContent = "Vagar Mode: ON";
+          headsState.forEach((head) => {
+            head.el.style.animation = "none";
+            head.el.style.opacity = "1";
+          });
+        } else {
+          motionToggleBtn.classList.remove("active");
+          document.getElementById("motionStatus").textContent = "Vagar Mode: OFF";
+        }
+      }
+
+      motionMediaQuery.addEventListener("change", (e) => {
+        isReducedMotion = e.matches;
+        updateMotionUI();
+      });
+
+      motionToggleBtn.addEventListener("click", () => {
+        isReducedMotion = !isReducedMotion;
+        updateMotionUI();
+      });
+
+      /* ==========================================================================
+         9. AMBIENT BACKGROUND SOUNDTRACK (YouTube: WnA6uVcjgfI)
+         ========================================================================== */
+      let bgPlayer = null;
+      let bgAudioActive = false;
+      let wasPlayingBeforeModal = false;
+
+      function tryPlayBgAudio() {
+        if (isModalOpen) return;
+        if (bgPlayer && typeof bgPlayer.playVideo === "function") {
+          try {
+            bgPlayer.playVideo();
+          } catch (_) {}
+        }
+      }
+
+      function pauseBgAudioForVideo() {
+        if (bgPlayer && typeof bgPlayer.getPlayerState === "function") {
+          try {
+            const state = bgPlayer.getPlayerState();
+            wasPlayingBeforeModal = (state === 1 || bgAudioActive);
+            bgPlayer.pauseVideo();
+          } catch (_) {}
+        }
+      }
+
+      function resumeBgAudioAfterVideo() {
+        if (wasPlayingBeforeModal) {
+          tryPlayBgAudio();
+        }
+      }
+
+      // Initialize YouTube API player
+      window.onYouTubeIframeAPIReady = function() {
+        bgPlayer = new YT.Player("ambientYoutubePlayer", {
+          height: "1",
+          width: "1",
+          videoId: "WnA6uVcjgfI",
+          playerVars: {
+            autoplay: 1,
+            loop: 1,
+            playlist: "WnA6uVcjgfI",
+            controls: 0,
+            disablekb: 1,
+            fs: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            rel: 0
+          },
+          events: {
+            onReady: (event) => {
+              try {
+                event.target.setVolume(55); // Pleasant ambient volume
+                event.target.playVideo();
+              } catch (_) {}
+            },
+            onStateChange: (event) => {
+              if (event.data === 1) { // YT.PlayerState.PLAYING
+                bgAudioActive = true;
+              } else if (event.data === 2) { // YT.PlayerState.PAUSED
+                bgAudioActive = false;
+              } else if (event.data === 0) { // YT.PlayerState.ENDED
+                // Loop
+                if (!isModalOpen) {
+                  try {
+                    event.target.playVideo();
+                  } catch (_) {}
+                }
+              }
+            }
+          }
+        });
+      };
+
+      // Ensure audio starts on first user touch / click / key / drag if autoplay was blocked by browser
+      function handleFirstUserSoundGesture() {
+        if (!bgAudioActive) {
+          tryPlayBgAudio();
+        }
+      }
+      window.addEventListener("pointerdown", handleFirstUserSoundGesture, { passive: true });
+      window.addEventListener("keydown", handleFirstUserSoundGesture, { passive: true });
+
+      /* ==========================================================================
+         10. START
+         ========================================================================== */
+      initHeads();
+      updateMotionUI();
+      requestAnimationFrame(animate);
+    </script>
+  </body>
+</html>

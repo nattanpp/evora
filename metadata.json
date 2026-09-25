@@ -1,0 +1,6 @@
+{
+  "name": "Bouncing Portraits Screensaver",
+  "description": "Interactive floating portrait heads screensaver bouncing smoothly across the screen with bio cards and video interviews.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
