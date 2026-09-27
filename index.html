@@ -962,9 +962,9 @@
         if (isPhone) {
           return {
             isPhone: true,
-            // Phone: tighter collision radius (34% of diameter = 68% of bounding box)
-            // matching the inner face silhouette, allowing heads to glide past each other on narrow screens
-            radiusFactor: 0.34,
+            // Phone: slightly larger collision radius (37% of diameter = 74% of bounding box)
+            // helps heads make reliable contact while still fitting narrow screens
+            radiusFactor: 0.37,
             restitution: 0.92,
             separationRate: 0.88,
             tangentialDeflection: 0.16,
@@ -980,9 +980,9 @@
         } else {
           return {
             isPhone: false,
-            // Computer: snug visual silhouette radius (40% of diameter = 80% of bounding box)
+            // Computer: slightly larger collision radius (43% of diameter = 86% of bounding box)
             // with snappy elastic physics, momentum, and mouse throwing
-            radiusFactor: 0.40,
+            radiusFactor: 0.43,
             restitution: 0.98,
             separationRate: 1.0,
             tangentialDeflection: 0.04,
