@@ -1762,14 +1762,14 @@
       function updateMotionUI() {
         if (isReducedMotion) {
           motionToggleBtn.classList.add("active");
-          document.getElementById("motionStatus").textContent = "Reduced Motion: ON";
+          document.getElementById("motionStatus").textContent = "Vagar Mode: ON";
           headsState.forEach((head) => {
             head.el.style.animation = "none";
             head.el.style.opacity = "1";
           });
         } else {
           motionToggleBtn.classList.remove("active");
-          document.getElementById("motionStatus").textContent = "Reduced Motion: OFF";
+          document.getElementById("motionStatus").textContent = "Vagar Mode: OFF";
         }
       }
 
