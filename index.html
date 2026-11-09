@@ -164,8 +164,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 250px;
-        height: 250px;
+        width: 225px;
+        height: 225px;
         cursor: grab;
         z-index: 15;
         will-change: transform, opacity;
@@ -745,11 +745,11 @@
          3. INITIALIZE HEAD OBJECTS & DOM
          ========================================================================== */
       function getHeadDiameter() {
-        return window.innerWidth <= 640 ? 120 : 168;
+        return window.innerWidth <= 640 ? 108 : 151;
       }
 
       function getVisualDiameter() {
-        return window.innerWidth <= 640 ? 185 : 250;
+        return window.innerWidth <= 640 ? 165 : 225;
       }
 
       function initHeads() {
@@ -765,6 +765,8 @@
           const container = document.createElement("div");
           container.className = "head-container";
           container.dataset.index = index;
+          container.style.width = `${visualDiameter}px`;
+          container.style.height = `${visualDiameter}px`;
           container.tabIndex = 0;
           container.setAttribute("role", "button");
           container.setAttribute("aria-label", `${person.name}, ${person.age} years old from ${person.city}. Press to view details.`);
